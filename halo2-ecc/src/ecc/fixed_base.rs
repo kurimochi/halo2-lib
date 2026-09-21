@@ -8,6 +8,8 @@ use halo2_base::gates::flex_gate::threads::{parallelize_core, SinglePhaseCoreMan
 use halo2_base::utils::BigPrimeField;
 use halo2_base::{gates::GateInstructions, utils::CurveAffineExt, AssignedValue, Context};
 use itertools::Itertools;
+#[cfg(feature = "multicore")]
+use rayon::prelude::*;
 use std::cmp::min;
 
 /// Computes `[scalar] * P` on y^2 = x^3 + b where `P` is fixed (constant)
@@ -135,31 +137,37 @@ where
 
     // `cached_points` is a flattened 2d vector
     // first we compute all cached points in Jacobian coordinates since it's fastest
-    let cached_points_jacobian = points
-        .iter()
-        .flat_map(|point| -> Vec<_> {
-            let base_pt = point.to_curve();
-            // cached_points[idx][i * 2^w + j] holds `[j * 2^(i * w)] * points[idx]` for j in {0, ..., 2^w - 1}
-            // EXCEPT cached_points[idx][0] = points[idx]
-            let mut increment = base_pt;
-            (0..num_windows)
-                .flat_map(|i| {
-                    let mut curr = increment;
-                    let cache_vec = std::iter::once(increment)
-                        .chain((1..(1usize << min(window_bits, total_bits - i * window_bits))).map(
-                            |_| {
-                                let prev = curr;
-                                curr += increment;
-                                prev
-                            },
-                        ))
-                        .collect::<Vec<_>>();
-                    increment = curr;
-                    cache_vec
-                })
-                .collect()
-        })
-        .collect::<Vec<_>>();
+    let cached_points_jacobian = {
+        #[cfg(feature = "multicore")]
+        let points = points.par_iter();
+        #[cfg(not(feature = "multicore"))]
+        let points = points.iter();
+        points
+            .flat_map(|point| -> Vec<_> {
+                let base_pt = point.to_curve();
+                // cached_points[idx][i * 2^w + j] holds `[j * 2^(i * w)] * points[idx]` for j in {0, ..., 2^w - 1}
+                // EXCEPT cached_points[idx][0] = points[idx]
+                let mut increment = base_pt;
+                (0..num_windows)
+                    .flat_map(|i| {
+                        let mut curr = increment;
+                        let cache_vec = std::iter::once(increment)
+                            .chain(
+                                (1..(1usize << min(window_bits, total_bits - i * window_bits)))
+                                    .map(|_| {
+                                        let prev = curr;
+                                        curr += increment;
+                                        prev
+                                    }),
+                            )
+                            .collect::<Vec<_>>();
+                        increment = curr;
+                        cache_vec
+                    })
+                    .collect()
+            })
+            .collect::<Vec<_>>()
+    };
     // for use in circuits we need affine coordinates, so we do a batch normalize: this is much more efficient than calling `to_affine` one by one since field inversion is very expensive
     // initialize to all 0s
     let mut cached_points_affine = vec![C::default(); cached_points_jacobian.len()];

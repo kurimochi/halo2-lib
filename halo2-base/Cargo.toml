@@ -16,6 +16,7 @@ num-integer = "0.1"
 num-traits = "0.2"
 rand_chacha = "0.3"
 rustc-hash = "1.1"
+rayon = { version = "1.8", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 log = "0.4"
@@ -58,6 +59,7 @@ mimalloc = { version = "0.1", default-features = false, optional = true }
 
 [features]
 default = ["display", "test-utils"]
+multicore = ["dep:rayon"]
 asm = ["halo2_proofs_axiom/asm", "halo2_proofs_axiom_gpu?/asm"]
 dev-graph = ["halo2_proofs_axiom/dev-graph", "plotters"]
 cuda = ["halo2_proofs_axiom_gpu"]
