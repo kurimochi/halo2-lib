@@ -213,7 +213,7 @@ impl<F: ScalarField> Context<F> {
         }
     }
 
-    /// The context id, this can be used as a tag when CPU multi-threading
+    /// The context id, which can be used as a tag for identifying contexts
     pub fn id(&self) -> usize {
         self.context_id
     }

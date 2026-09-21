@@ -8,7 +8,6 @@ use halo2_base::gates::flex_gate::threads::{parallelize_core, SinglePhaseCoreMan
 use halo2_base::utils::BigPrimeField;
 use halo2_base::{gates::GateInstructions, utils::CurveAffineExt, AssignedValue, Context};
 use itertools::Itertools;
-use rayon::prelude::*;
 use std::cmp::min;
 
 /// Computes `[scalar] * P` on y^2 = x^3 + b where `P` is fixed (constant)
@@ -137,7 +136,7 @@ where
     // `cached_points` is a flattened 2d vector
     // first we compute all cached points in Jacobian coordinates since it's fastest
     let cached_points_jacobian = points
-        .par_iter()
+        .iter()
         .flat_map(|point| -> Vec<_> {
             let base_pt = point.to_curve();
             // cached_points[idx][i * 2^w + j] holds `[j * 2^(i * w)] * points[idx]` for j in {0, ..., 2^w - 1}

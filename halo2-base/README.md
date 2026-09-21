@@ -1,6 +1,6 @@
 # `halo2-base`
 
-`halo2-base` provides an embedded domain specific language (eDSL) for writing circuits with the [`halo2`](https://github.com/axiom-crypto/halo2) API. It simplifies circuit programming to declaring constraints over a single advice and selector column and provides built-in circuit tuning and support for multi-threaded witness generation.
+`halo2-base` provides an embedded domain specific language (eDSL) for writing circuits with the [`halo2`](https://github.com/axiom-crypto/halo2) API. It simplifies circuit programming to declaring constraints over a single advice and selector column and provides built-in circuit tuning for witness generation.
 
 For further details, see the [Rust docs](https://axiom-crypto.github.io/halo2-lib/halo2_base/).
 
@@ -67,7 +67,7 @@ MockProver::run(k as u32, &builder, instances).unwrap().assert_satisfied();
 
 During `synthesize()`, the advice values of all `Context`s are concatenated into a single "virtual column" that is split into multiple true `Column`s at `break_points` each representing a different sub-section of the "virtual column". During circuit synthesis, all cells are assigned to Halo2 `AssignedCell`s in a single `Region` within Halo2's backend.
 
-For parallel witness generation, multiple `Context`s are created for each parallel operation. After parallel witness generation, these `Context`'s are combined to form a single "virtual column" as above. Note that while the witness generation can be multi-threaded, the ordering of the contents in each `Context`, and the order of the `Context`s themselves, must be deterministic.
+For independent witness-generation operations, multiple `Context`s can be created and then combined to form a single "virtual column" as above. The ordering of the contents in each `Context`, and the order of the `Context`s themselves, must be deterministic.
 
 **Warning:** If you create your own `Context` in a new virtual region not provided by our libraries, you must ensure that the `type_id: &str` of the context is a globally unique identifier for the virtual region, distinct from the other `type_id` strings used to identify other virtual regions. We suggest that you either include your crate name as a prefix in the `type_id` or use [`module_path!`](https://doc.rust-lang.org/std/macro.module_path.html) to generate a prefix.
 In the future we will introduce a macro to check this uniqueness at compile time.

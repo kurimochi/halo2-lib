@@ -2,9 +2,6 @@ use std::collections::{BTreeMap, HashMap};
 use std::ops::DerefMut;
 use std::sync::{Arc, Mutex, OnceLock};
 
-use itertools::Itertools;
-use rayon::slice::ParallelSliceMut;
-
 use crate::halo2_proofs::{
     circuit::{Cell, Region},
     plonk::{Assigned, Column, Fixed},
@@ -12,6 +9,7 @@ use crate::halo2_proofs::{
 use crate::utils::halo2::{raw_assign_fixed, raw_constrain_equal, Halo2AssignedCell};
 use crate::AssignedValue;
 use crate::{ff::Field, ContextCell};
+use itertools::Itertools;
 
 use super::manager::VirtualRegionManager;
 
@@ -134,7 +132,7 @@ impl<F: Field + Ord> VirtualRegionManager<F> for SharedCopyConstraintManager<F> 
         // We further sort by ContextCell because the backend implementation of `raw_constrain_equal` (permutation argument) seems to depend on the order you specify copy constraints...
         manager
             .constant_equalities
-            .par_sort_unstable_by(|(c1, cell1), (c2, cell2)| c1.cmp(c2).then(cell1.cmp(cell2)));
+            .sort_unstable_by(|(c1, cell1), (c2, cell2)| c1.cmp(c2).then(cell1.cmp(cell2)));
         // Assign fixed cells, we go left to right, then top to bottom, to avoid needing to know number of rows here
         let mut fixed_col = 0;
         let mut fixed_offset = 0;
@@ -152,7 +150,7 @@ impl<F: Field + Ord> VirtualRegionManager<F> for SharedCopyConstraintManager<F> 
         }
 
         // Just in case: we sort by ContextCell because the backend implementation of `raw_constrain_equal` (permutation argument) seems to depend on the order you specify copy constraints...
-        manager.advice_equalities.par_sort_unstable();
+        manager.advice_equalities.sort_unstable();
         // Impose equality constraints between assigned advice cells
         // At this point we assume all cells have been assigned by other VirtualRegionManagers
         for (left, right) in &manager.advice_equalities {

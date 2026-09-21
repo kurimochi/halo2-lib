@@ -264,7 +264,7 @@ where
         any_points.push(ec_double(chip, ctx, any_points.last().unwrap()));
     }
 
-    // now begins multi-threading
+    // now process each independent context
     // multi_prods is 2d vector of size `num_rounds` by `scalar_bits`
     let multi_prods = parallelize_core(
         builder,

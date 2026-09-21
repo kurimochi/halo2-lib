@@ -6,7 +6,7 @@ license = "MIT"
 edition = "2021"
 repository = "https://github.com/axiom-crypto/halo2-lib"
 readme = "README.md"
-description = "Embedded domain specific language (eDSL) for writing circuits with the [`halo2`](https://github.com/axiom-crypto/halo2) API. It simplifies circuit programming to declaring constraints over a single advice and selector column and provides built-in circuit tuning and support for multi-threaded witness generation."
+description = "Embedded domain specific language (eDSL) for writing circuits with the [`halo2`](https://github.com/axiom-crypto/halo2) API. It simplifies circuit programming to declaring constraints over a single advice and selector column and provides built-in circuit tuning for witness generation."
 rust-version = "1.91.1"
 
 [dependencies]
@@ -16,7 +16,6 @@ num-integer = "0.1"
 num-traits = "0.2"
 rand_chacha = "0.3"
 rustc-hash = "1.1"
-rayon = "1.8"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 log = "0.4"
@@ -24,7 +23,9 @@ getset = "0.1.2"
 ark-std = { version = "0.3.0", features = ["print-trace"], optional = true }
 
 # Use Axiom's custom halo2 monorepo for faster proving
-halo2_proofs_axiom = { package = "halo2-axiom", version = "0.5.3", git = "https://github.com/axiom-crypto/halo2.git", branch = "main" }
+halo2_proofs_axiom = { package = "halo2-axiom", version = "0.5.3", git = "https://github.com/axiom-crypto/halo2.git", branch = "main", default-features = false, features = [
+    "circuit-params",
+] }
 # Use Axiom's CUDA halo2 prover when feature = "cuda" is on
 halo2_proofs_axiom_gpu = { package = "halo2-axiom-gpu", version = "1.0.1", git = "https://github.com/axiom-crypto/halo2-gpu.git", branch = "main", optional = true }
 # This is Scroll's audited poseidon circuit. We only use it for the Native Poseidon spec. We do not use the halo2 circuit at all (and it wouldn't even work because the halo2_proofs tag is not compatbile).
